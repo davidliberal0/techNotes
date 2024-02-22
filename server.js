@@ -2,13 +2,27 @@ const express = require('express')
 const app = express()
 const path = require('path')
 const PORT = process.env.PORT || 3500
+const cors = require('cors')
+const corsOptions = require('./config/corsOptions')
+const cookieParser = require('cookie-parser')
+const { logger } = require('./middleware/logger')
+const errorHandler = require('./middleware/errorHandler')
 
-// listen for routes 
+app.use(logger)
+
+app.use(cors(corsOptions))
+
+app.use(express.json())
+
+app.use(cookieParser)
+
+// listen for routes - points file location for server 
 app.use('/', express.static(path.join(__dirname, '/public')))
 
 
 app.use('/', require('./routes/root'))
 
+// if page or path does not exist 
 app.all('*', (req, res) => {
     res.status(404)
     if (req.accepts('html')) {
@@ -19,6 +33,8 @@ app.all('*', (req, res) => {
         res.type('txt').send('404 Not Found')
     }
 })
+
+app.use(errorHandler)
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
